@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">PMDM06</string>
+    <string name="menu_summarize">Resumen</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_map">Map</string>
+    <string name="OK">OK</string>
+    <string name="cancel">CANCEL</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
