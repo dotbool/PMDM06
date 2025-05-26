@@ -14,27 +14,27 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import martinezruiz.javier.pmdm06.R;
-import martinezruiz.javier.pmdm06.models.ControlPoint;
+import martinezruiz.javier.pmdm06.models.GimActivity;
 
-public class ControlPointsLocalDataSource {
+public class GimActivitiesLocalDataSource {
 
-    public ControlPointsLocalDataSource(Context ctx) {
+    public GimActivitiesLocalDataSource(Context ctx) {
         this.ctx = ctx;
     }
 
-    public ArrayList<ControlPoint> getControlPoints() {
+    public ArrayList<GimActivity> getGimActivities() {
 
-        ArrayList<ControlPoint> controlPointArrayList = new ArrayList<>();
+        ArrayList<GimActivity> gimActivityArrayList = new ArrayList<>();
         InputStream inputStream = null;
         try {
-            inputStream = ctx.getResources().openRawResource(R.raw.control_points);
+            inputStream = ctx.getResources().openRawResource(R.raw.gim_activities);
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             factory.setNamespaceAware(true);
             XmlPullParser parser = factory.newPullParser();
             parser.setInput(inputStream, null);
 
             int eventType = parser.getEventType();
-            ControlPoint controlPoint = null;
+            GimActivity gimActivity = null;
 
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 String tagName = null;
@@ -43,19 +43,19 @@ public class ControlPointsLocalDataSource {
                     case XmlPullParser.START_TAG:
                         tagName = parser.getName();
 
-                        if ("controlPoint".equals(tagName)) {
-                            controlPoint = new ControlPoint();
-                        } else if (controlPoint != null) {
+                        if ("gimActivity".equals(tagName)) {
+                            gimActivity = new GimActivity();
+                        } else if (gimActivity != null) {
                             if ("name".equals(tagName)) {
-                                controlPoint.setName(parser.nextText());
+                                gimActivity.setName(parser.nextText());
                             } else if ("activity".equals(tagName)) {
-                                controlPoint.setActivity(parser.nextText());
+                                gimActivity.setActivity(parser.nextText());
                             } else if ("goal".equals(tagName)) {
-                                controlPoint.setGoal(parser.nextText());
+                                gimActivity.setGoal(parser.nextText());
                             } else if ("latitude".equals(tagName)) {
-                                controlPoint.setLatitude(Double.parseDouble(parser.nextText()));
+                                gimActivity.setLatitude(Double.parseDouble(parser.nextText()));
                             } else if ("longitude".equals(tagName)) {
-                                controlPoint.setLongitude(Double.parseDouble(parser.nextText()));
+                                gimActivity.setLongitude(Double.parseDouble(parser.nextText()));
                             }
 
                         }
@@ -63,8 +63,8 @@ public class ControlPointsLocalDataSource {
 
                     case XmlPullParser.END_TAG:
                         tagName = parser.getName();
-                        if("controlPoint".equals(tagName)){
-                            controlPointArrayList.add(controlPoint);
+                        if("gimActivity".equals(tagName)){
+                            gimActivityArrayList.add(gimActivity);
                         }
                         break;
 
@@ -79,9 +79,8 @@ public class ControlPointsLocalDataSource {
         catch (XmlPullParserException | IOException e) {
             throw new RuntimeException(e);
         }
-        Log.d("Acabando el list","");
 
-        return controlPointArrayList;
+        return gimActivityArrayList;
     }
 
     private Context ctx;

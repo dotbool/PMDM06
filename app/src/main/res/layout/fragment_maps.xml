@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.fragment.app.FragmentContainerView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+<androidx.fragment.app.FragmentContainerView
+
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:map="http://schemas.android.com/apk/res-auto"
     android:id="@+id/map"
@@ -11,7 +16,16 @@
     map:uiRotateGestures="true"
     map:mapType="normal"
     />
-    <!--    map:cameraTilt="90"-->
-    <!--    map:cameraZoom="0"-->
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/switchLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:text="posición actual"/>
+</FrameLayout>
+
+
+
 
 

@@ -9,12 +9,15 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.DefaultLifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.util.Observable;
 
-public class SensorTest implements SensorEventListener {
+public class SensorTest implements SensorEventListener, DefaultLifecycleObserver {
 
 
     public SensorTest(Context ctx) {
@@ -22,14 +25,22 @@ public class SensorTest implements SensorEventListener {
         this.ctx = ctx;
         sensorManager = (SensorManager) ctx.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         geoMagnetic = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
+
+    }
+
+    @Override
+    public void onResume(@NonNull LifecycleOwner owner) {
         sensorManager.registerListener(this, geoMagnetic, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
-
+    @Override
+    public void onPause(@NonNull LifecycleOwner owner) {
+        sensorManager.unregisterListener(this, geoMagnetic);
+        sensorManager.unregisterListener(this, accelerometer);
+    }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -37,18 +48,23 @@ public class SensorTest implements SensorEventListener {
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
-                System.arraycopy(event.values, 0, mValuesAccel, 0, 3);
+//                System.arraycopy(event.values, 0, mValuesAccel, 0, 3);
+                support.firePropertyChange("mValuesAccel", 0, event.values);
+
                 break;
 
             case Sensor.TYPE_MAGNETIC_FIELD:
-                System.arraycopy(event.values, 0, mValuesMagnet, 0, 3);
+//                System.arraycopy(event.values, 0, mValuesMagnet, 0, 3);
+                support.firePropertyChange("mValuesMagnet", 0, event.values);
+
                 break;
         }
 
+
 //        SensorManager.getRotationMatrix(mRotationMatrix, null, mValuesAccel, mValuesMagnet);
 //        SensorManager.getOrientation(mRotationMatrix, mValuesOrientation);
-        support.firePropertyChange("mValuesAccel", 0, mValuesAccel);
-        support.firePropertyChange("mValuesMagnet", 0, mValuesMagnet);
+//        support.firePropertyChange("mValuesAccel", 0, event.values);
+//        support.firePropertyChange("mValuesMagnet", 0, event.values);
 
     }
 
@@ -57,18 +73,9 @@ public class SensorTest implements SensorEventListener {
 
     }
 
-//public float getResults(){
-//    SensorManager.getRotationMatrix(mRotationMatrix, null, mValuesAccel, mValuesMagnet);
-//    SensorManager.getOrientation(mRotationMatrix, mValuesOrientation);
-//    final CharSequence test;
-//    test = "results: " + mValuesOrientation[0] +" "+mValuesOrientation[1]+ " "+ mValuesOrientation[2];
-//    Log.d("TEST", test+"");
-//    return mValuesOrientation[1];
-//}
 
     public final SensorManager sensorManager;
     public final Sensor accelerometer;
-    private final Sensor gyroscope;
     private final Sensor geoMagnetic;
 
     private Context ctx;

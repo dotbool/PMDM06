@@ -1,74 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<controlPoints>
-    <controlPoint>
+<gimActivities>
+    <gimActivity>
         <name>Torre de la Higuera</name>
-        <activity></activity>
-        <goal></goal>
+        <activity>El monitor mostrará 5 cangrejos que deberán ser recogidos</activity>
+        <goal>Recoger 5 cangrejos</goal>
         <latitude>37.005304051021305</latitude>
         <longitude>-6.5681412173184315</longitude>
-    </controlPoint>
-    <controlPoint>
+    </gimActivity>
+    <gimActivity>
         <name>Faro de Trafalgar</name>
         <activity></activity>
         <goal></goal>
         <latitude>36.18344915426124</latitude>
         <longitude>-6.034953596561043</longitude>
-    </controlPoint>
-    <controlPoint>
+    </gimActivity>
+    <gimActivity>
         <name>Cascadas del Hueznar</name>
         <activity></activity>
         <goal></goal>
         <latitude>37.99387231926894</latitude>
         <longitude>-5.669768308039871</longitude>
-    </controlPoint>
-    <controlPoint>
+    </gimActivity>
+    <gimActivity>
         <name>Estacionamiento de Autocaravanas</name>
         <activiy></activiy>
         <goal></goal>
         <latitude>37.2095511405861</latitude>
         <longitude>-7.408404954588531</longitude>
-    </controlPoint>
-    <controlPoint>
+    </gimActivity>
+    <gimActivity>
         <name>Mezquita de Córdoba</name>
         <activity></activity>
         <goal></goal>
         <latitude>37.88047700721796</latitude>
         <longitude>-4.779511934499477</longitude>
-    </controlPoint>
-    <controlPoint>
+    </gimActivity>
+    <gimActivity>
         <name>Puerto deportivo de Agudulce</name>
         <activity></activity>
         <goal></goal>
         <latitude>36.8146438249059</latitude>
         <longitude>-2.562053432636662</longitude>
-    </controlPoint>
-    <controlPoint>
+    </gimActivity>
+    <gimActivity>
         <name>Jardín botánico de Rodalquilar</name>
         <activity></activity>
         <goal></goal>
         <latitude>36.84997540275916</latitude>
         <longitude>-2.043006441105735</longitude>
-    </controlPoint>
-    <controlPoint>
+    </gimActivity>
+    <gimActivity>
         <name>Sierra nevada</name>
         <activity></activity>
         <goal></goal>
         <latitude>37.0560077373027</latitude>
         <longitude>-3.3009549232213224</longitude>
-    </controlPoint>
-    <controlPoint>
+    </gimActivity>
+    <gimActivity>
         <name>Burguer King de Jaen</name>
         <activity></activity>
         <goal></goal>
         <latitude>37.79201215833766</latitude>
         <longitude>-3.7817201000982146</longitude>
-    </controlPoint>
-    <controlPoint>
+    </gimActivity>
+    <gimActivity>
         <name>Mirador de la Playa de los Muertos</name>
         <activity></activity>
         <goal></goal>
         <latitude>36.95557528394903</latitude>
         <longitude>-1.9003393091609775</longitude>
-    </controlPoint>
-</controlPoints>
+    </gimActivity>
+
+    <gimActivity>
+        <name>Home</name>
+        <activity>Esta es tu casa y aquí tienes que crear esta historia</activity>
+        <goal></goal>
+        <latitude>37.3016242</latitude>
+        <longitude>-6.2493372</longitude>
+    </gimActivity>
+</gimActivities>
 

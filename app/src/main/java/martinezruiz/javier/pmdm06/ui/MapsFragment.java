@@ -1,48 +1,49 @@
 package martinezruiz.javier.pmdm06.ui;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.DiffUtil;
 
-import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.hardware.SensorManager;
-import android.location.Location;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.materialswitch.MaterialSwitch;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import martinezruiz.javier.pmdm06.R;
 import martinezruiz.javier.pmdm06.SensorTest;
-import martinezruiz.javier.pmdm06.models.ControlPoint;
+import martinezruiz.javier.pmdm06.databinding.FragmentMapsBinding;
+import martinezruiz.javier.pmdm06.models.ControlPointProgress;
 import martinezruiz.javier.pmdm06.viewmodels.ControlPointsViewModel;
 
-public class MapsFragment extends Fragment {
+public class MapsFragment extends Fragment implements GoogleMap.OnInfoWindowClickListener {
 
     private OnMapReadyCallback callback = new OnMapReadyCallback() {
 
@@ -60,62 +61,128 @@ public class MapsFragment extends Fragment {
             googleMap.getUiSettings().setCompassEnabled(true);
             map = googleMap;
 
-            if(controlPointsList != null &&  !controlPointsList.isEmpty()){
+
+            try {
+                // Customise the styling of the base map using a JSON object defined
+                // in a raw resource file.
+                boolean success = googleMap.setMapStyle(
+                        MapStyleOptions.loadRawResourceStyle(
+                                requireContext(), R.raw.style_json));
+
+                if (!success) {
+                    Log.e("CARGA ESTILO", "Style parsing failed.");
+                }
+            } catch (Resources.NotFoundException e) {
+                Log.e("CARGA MAPA", "Can't find style. Error: ", e);
+            }
 
 
-                controlPointsList.forEach(c -> {
-                    LatLng latLng = new LatLng(c.getLatitude(), c.getLongitude());
-                    googleMap.addMarker(new MarkerOptions().position(latLng).title(c.getName()));
+            map.setInfoWindowAdapter(new MyInfoWindowAdapter(requireContext()));
+            map.setOnInfoWindowClickListener(MapsFragment.this);
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(requireContext(),
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+//            map.setMyLocationEnabled(true);
+            }
+
+            if(controlPointsProgressList != null &&  !controlPointsProgressList.isEmpty()){
+
+
+                controlPointsProgressList.forEach(cpp -> {
+                    LatLng latLng = new LatLng(cpp.getGimActivity().getLatitude(), cpp.getGimActivity().getLongitude());
+
+                    Marker marker = googleMap.addMarker(new MarkerOptions()
+                            .position(latLng)
+                            .title(cpp.getGimActivity().getName())
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.iconsbandicoot))
+                            .snippet(cpp.getGimActivity().getActivity()+".\n"+ cpp.getGimActivity().getGoal()));
+                    assert marker != null;
+                    marker.setTag(cpp);
+
+                    markerArrayList.add(marker);
                 });
 
-                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(
-                                currentPosition.latitude, currentPosition.longitude),
-                        googleMap.getMaxZoomLevel()));
+
             }
 
             sensorTest.addPropertyChangeListener(new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent evt) {
-                    Log.d(evt.getNewValue()+" new value", evt.getNewValue()+ "new value");
 
                     if(evt.getPropertyName().equals("mValuesAccel")){
-
                         mValuesAccel = applyLowPassFilter((float[])evt.getNewValue(), mValuesAccel);
-//                        System.arraycopy((float[])evt.getNewValue(), 0, mValuesAccel, 0, 3);
-
-
                     }
                     else if(evt.getPropertyName().equals("mValuesMagnet")){
                         mValuesMagnet = applyLowPassFilter((float[]) evt.getNewValue(), mValuesMagnet);
-//                        System.arraycopy((float[])evt.getNewValue(), 0, mValuesMagnet, 0, 3);
 
                     }
                     SensorManager.getRotationMatrix(mRotationMatrix, null, mValuesAccel, mValuesMagnet);
                     SensorManager.getOrientation(mRotationMatrix, mValuesOrientation);
 
                     float incl = mValuesOrientation[1];
-                    float gradosa = incl * 57.295f;
                     float grados = Math.abs(incl * 57.295f);
-                    Log.d(gradosa+"", "GRADOS");
-//                    grados = grados >= 90 ? 90: grados;
-
-
                     float bearing = mValuesOrientation[0];
-                    float degree = bearing * 57.295f;
-                    float zoom = map.getCameraPosition().zoom;
+                    float bearingInDegrees = Math.round((float) (Math.toDegrees(bearing)+360) % 360);
 
-                            map.moveCamera(CameraUpdateFactory.newCameraPosition(
+                    float zoom = map.getCameraPosition().zoom;
+//
+//                    switchLocation.setOnClickListener(new View.OnClickListener() {
+//                        @Override
+//                        public void onClick(View v) {
+//
+//                            if(switchLocation.isChecked()){
+//                                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(
+//                                            currentPosition.latitude, currentPosition.longitude),
+//                                    googleMap.getMaxZoomLevel()));
+//
+//
+//                            }
+//                        }
+//                    });
+
+                    if(switchLocation.isChecked()) {
+                        if (System.currentTimeMillis() - lastUpdate > updateCoolDown) {
+
+                            map.animateCamera(CameraUpdateFactory.newCameraPosition(
                                     CameraPosition.builder()
                                             .target(currentPosition)
-                                            .bearing(degree)
+                                            .bearing(bearingInDegrees)
                                             .tilt(grados)
-                                            .zoom(zoom)
+                                            .zoom(googleMap.getMaxZoomLevel())
                                             .build()));
 
-                }
-            });
+                            lastUpdate = new Date().getTime();
+                        }
+                    }
 
 
+//
+//                    controlPointsList.forEach(cp ->{
+//                        if ((Math.abs(currentPosition.latitude) - Math.abs(cp.getLatitude())) <= 0.001
+//                                && (Math.abs(currentPosition.longitude) - Math.abs(cp.getLongitude())) <= 0.001) {
+//                            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(
+//                                            currentPosition.latitude, currentPosition.longitude),
+//                                    googleMap.getMaxZoomLevel()));
+//                        }
+//
+//                    });
+//
+//                                if (System.currentTimeMillis() - lastUpdate > updateCoolDown) {
+//
+//                                    map.moveCamera(CameraUpdateFactory.newCameraPosition(
+//                                            CameraPosition.builder()
+//                                                    .target(currentPosition)
+//                                                    .bearing(bearingInDegrees)
+//                                                    .tilt(grados)
+//                                                    .zoom(zoom)
+//                                                    .build()));
+//                                    lastUpdate = new Date().getTime();
+//                                }
+
+                            }
+                    });
         }
     };
 
@@ -126,7 +193,10 @@ public class MapsFragment extends Fragment {
         controlPointsViewModel = new ViewModelProvider(requireActivity(),
                 ViewModelProvider.Factory.from(ControlPointsViewModel.initializer))
                 .get(ControlPointsViewModel.class);
+//        binding = MyInfoWindowBinding.inflate(getLayoutInflater());
+//        binding = DataBindingUtil.setContentView(requireActivity(), R.layout.my_info_window);
         sensorTest = new SensorTest(requireActivity());
+        getLifecycle().addObserver(sensorTest);
 
 
 
@@ -138,30 +208,23 @@ public class MapsFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        controlPointsViewModel.getControlPointsList().observe(getViewLifecycleOwner(), controlPoints -> {
-            controlPointsList = controlPoints;
+        controlPointsViewModel.getControlPointsProgressList().observe(getViewLifecycleOwner(), controlPoints -> {
+//            controlPointsProgressList = controlPoints;
+            updateList((ArrayList<ControlPointProgress>) controlPoints);
+
+
+            
         });
 
         controlPointsViewModel.getCurrentPosition().observe(getViewLifecycleOwner(), currentPosition -> {
             this.currentPosition = currentPosition;
         });
 
-//        controlPointsViewModel.getInclinacion().observe(getViewLifecycleOwner(), incl ->{
-//            float grados = incl * 57.295f;
-//
-//            map.moveCamera(CameraUpdateFactory.newCameraPosition(
-//                    CameraPosition.builder()
-//                            .target(currentPosition)
-//                            .zoom(map.getMaxZoomLevel())
-//                            .tilt(-(grados)).build()));
-//        });
+        FragmentMapsBinding binding = FragmentMapsBinding.inflate(inflater, container, false);
+        switchLocation = binding.switchLocation;
 
 
-        fragmentView = inflater.inflate(R.layout.fragment_maps, container, false);
-
-
-
-        return fragmentView;
+        return binding.getRoot();
     }
 
     @Override
@@ -172,26 +235,62 @@ public class MapsFragment extends Fragment {
         if (mapFragment != null) {
             mapFragment.getMapAsync(callback);
         }
+    }
 
+    @Override
+    public void onInfoWindowClick(@NonNull Marker marker) {
+
+        ControlPointProgress cpp = (ControlPointProgress) marker.getTag();
+        cpp.setProgress(16);
+        controlPointsViewModel.setControlPointsProgressList(controlPointsProgressList);
+        marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+
+
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+//        builder.setMessage(marker.getSnippet()+". Progress "+ (Integer) marker.getTag()+ "%");
+
+        builder.create();
+        builder.show();
 
 
     }
 
+
     private float[] applyLowPassFilter(float[] input, float[] output) {
         if ( output == null ) return input;
 
-        for ( int i=0; i<input.length; i++ ) {
+        for ( int i=0; i < input.length; i++ ) {
             output[i] = output[i] + ALPHA * (input[i] - output[i]);
         }
         return output;
     }
 
+    private void updateList(ArrayList<ControlPointProgress> newList){
+
+        if(controlPointsProgressList.isEmpty()){
+            controlPointsProgressList = newList;
+        }
+        else {
+            controlPointsProgressList.stream().peek(cpp -> {
+
+                for (ControlPointProgress newCpp : newList) {
+                    cpp.setProgress(newCpp.getProgress());
+                }
+
+            });
+        }
+
+        controlPointsProgressList.forEach(cpp -> Log.d(cpp.getProgress()+"PROGRESS", cpp.getProgress()+"PROGRESS" ));
+    }
+
+
     private static final float ALPHA = 0.5f;
 
 
-
+    boolean inZone = false;
     ControlPointsViewModel controlPointsViewModel;
-    List<ControlPoint> controlPointsList = new ArrayList<>();
+    ArrayList<ControlPointProgress> controlPointsProgressList = new ArrayList<>();
     LatLng currentPosition;
     SensorTest sensorTest;
     View fragmentView;
@@ -201,5 +300,11 @@ public class MapsFragment extends Fragment {
     float[] mValuesAccel       = new float[3];
     final float[] mValuesOrientation = new float[3];
     final float[] mRotationMatrix    = new float[9];
+    long updateCoolDown = 50;
+    long lastUpdate;
+
+    ArrayList<Marker> markerArrayList = new ArrayList<>();
+    MaterialSwitch switchLocation;
+
 
 }

@@ -15,9 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import martinezruiz.javier.pmdm06.Pmdm06Application;
-import martinezruiz.javier.pmdm06.models.ControlPoint;
+import martinezruiz.javier.pmdm06.models.ControlPointProgress;
+import martinezruiz.javier.pmdm06.models.GimActivity;
 import martinezruiz.javier.pmdm06.models.ErrorData;
-import martinezruiz.javier.pmdm06.persistence.repository.ControlPointRepository;
+import martinezruiz.javier.pmdm06.persistence.repository.GimActivitiesRepository;
 
 public class ControlPointsViewModel extends ViewModel {
 
@@ -35,15 +36,16 @@ public class ControlPointsViewModel extends ViewModel {
         }
     }
 
-    public ControlPointsViewModel(ControlPointRepository controlPointRepository) {
-        this.controlPointRepository = controlPointRepository;
+    public ControlPointsViewModel(GimActivitiesRepository gimActivitiesRepository) {
+        this.gimActivitiesRepository = gimActivitiesRepository;
+        controlPointProgressArrayList = new ArrayList<>();
 
-        inclinacion = new MutableLiveData<>();
         currentPosition = new MutableLiveData<>();
-        controlPointsList = new MutableLiveData<>();
+        controlPointsProgressList = new MutableLiveData<>();
         errorData = new MutableLiveData<>();
-        controlPointArrayList = controlPointRepository.getControlPointsList();
-        controlPointsList.postValue(controlPointArrayList);
+        gimActivityArrayList = gimActivitiesRepository.getControlPointsList();
+        gimActivityArrayList.forEach(ga -> { controlPointProgressArrayList.add(new ControlPointProgress(ga));});
+        controlPointsProgressList.postValue(controlPointProgressArrayList);
     }
 
     public static final ViewModelInitializer<ControlPointsViewModel> initializer = new ViewModelInitializer<>(
@@ -51,12 +53,12 @@ public class ControlPointsViewModel extends ViewModel {
             creationExtras -> {
                 Pmdm06Application app = (Pmdm06Application) creationExtras.get(APPLICATION_KEY);
                 assert app != null;
-                return new ControlPointsViewModel(app.appContainer.controlPointRepository);
+                return new ControlPointsViewModel(app.appContainer.gimActivitiesRepository);
             }
     );
 
-    public LiveData<List<ControlPoint>> getControlPointsList() {
-        return controlPointsList;
+    public LiveData<List<ControlPointProgress>> getControlPointsProgressList() {
+        return controlPointsProgressList;
     }
 
     @Override
@@ -74,20 +76,16 @@ public class ControlPointsViewModel extends ViewModel {
         currentPosition.setValue(position);
     }
 
-    public LiveData<Float> getInclinacion(){
-        return inclinacion;
+
+    public void setControlPointsProgressList(ArrayList<ControlPointProgress> list){
+        controlPointsProgressList.postValue(list);
     }
 
-    public void setInclinacion(float incl){
-        inclinacion.setValue(incl);
-    }
-
-
-    private MutableLiveData<Float> inclinacion;
     private MutableLiveData<LatLng> currentPosition;
-    private ArrayList<ControlPoint> controlPointArrayList;
-    private final MutableLiveData<List<ControlPoint>> controlPointsList;
+    private ArrayList<GimActivity> gimActivityArrayList;
+    private ArrayList<ControlPointProgress> controlPointProgressArrayList;
+    private final MutableLiveData<List<ControlPointProgress>> controlPointsProgressList;
     private MutableLiveData<ErrorData> errorData;
 //    CompositeDisposable disposables = new CompositeDisposable();
-    ControlPointRepository controlPointRepository;
+    GimActivitiesRepository gimActivitiesRepository;
 }

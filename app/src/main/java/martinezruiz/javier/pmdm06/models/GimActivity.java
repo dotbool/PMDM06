@@ -1,8 +1,8 @@
 package martinezruiz.javier.pmdm06.models;
 
-public class ControlPoint {
+public class GimActivity {
 
-    public ControlPoint() {
+    public GimActivity() {
     }
 
     public String getActivity() {
@@ -45,6 +45,13 @@ public class ControlPoint {
         this.name = name;
     }
 
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 
     @Override
     public String toString() {
@@ -62,5 +69,7 @@ public class ControlPoint {
     private String goal;
     private double latitude;
     private double longitude;
+
+    private long id;
 
 }
